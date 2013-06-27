@@ -15,14 +15,20 @@ module Api
         render :template => "api/v1/smart_proxies/show"
       end
 
-      api :GET, "/smart_proxies/:id/import_all_environments", "Import puppetclasses from smart proxy"
-      param :id, :number, :required => true, :desc => "smart proxy id"
-
-      def import_all_environements
-        opts = { :url => SmartProxy.find(:id).try(:url) }
+      api :GET, "/smart_proxies/:id/import_all_environments/", "Import environments and puppetclasses from smart proxy"
+      param :id, :integer, :required => true, :desc => "smart proxy id"
+      def import_all_environments
+        opts = { :url => SmartProxy.find(params[:id]).url }
         @importer = PuppetClassImporter.new(opts)
-        @changed  = @importer.changes
-        PuppetClassImporter.new.obsolete_and_new(@changed)
+        @changed  = @importer.changes 
+        if @changed["new"].size > 0 or @changed["obsolete"].size > 0 or @changed["updated"].size > 0
+                @changed.delete_if {|k,v| v.empty?}
+                @changed.each {|e,i| i.each {|k,v| i[k]=v.to_json }}
+                ::PuppetClassImporter.new.obsolete_and_new(@changed)
+                render :json => @changed
+        else
+        render :json => @changed.to_json
+        end
       end
 
     end

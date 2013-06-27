@@ -119,6 +119,9 @@ Foreman::Application.routes.draw do
       resources :smart_proxies, :only => [] do
         (resources :locations, :only => [:index, :show]) if SETTINGS[:locations_enabled]
         (resources :organizations, :only => [:index, :show]) if SETTINGS[:organizations_enabled]
+        member do
+          get 'import_all_environtments'
+        end
       end
 
       resources :users, :only => [] do
